@@ -26,8 +26,8 @@ const SamplesSelection = ({
           </div>
         )
       })}
-      <Button variant={"secondary"} onClick={() => onClick("")}>
-        Clear selection
+      <Button variant={"secondary"} onClick={() => window.location.reload()}>
+        Start over
       </Button>
     </div>
   )

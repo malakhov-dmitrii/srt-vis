@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import SamplesSelection from "@/app/(components)/samples-selection"
 import TextFrame from "@/app/(components)/text-frame"
 
