@@ -54,7 +54,7 @@ const postProcessSrtWithChatGpt = async (source: string, srt: SRT) => {
     chunks.push(srt.slice(i, i + chunkSize))
   }
 
-  const answers = []
+  const answers = [] as string[]
   for await (const chunk of chunks) {
     const part = parser.toSrt(srt)
     const messages: ChatCompletionResponseMessage[] = [
