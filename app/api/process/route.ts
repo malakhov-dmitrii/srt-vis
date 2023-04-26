@@ -23,5 +23,5 @@ export const GET = async (req: Request) => {
   const url = new URL(req.url)
   const id = url.searchParams.get("id")
   console.log({ id })
-  return NextResponse.json({ jobId })
+  return NextResponse.json({ id })
 }
