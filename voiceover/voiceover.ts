@@ -1,7 +1,7 @@
 import { SRT } from "@/types"
 import { getCompletion } from "@/voiceover/openai"
 import axios from "axios"
-import { path, write } from "fs-jetpack"
+import { uniqBy } from "lodash"
 import { ChatCompletionResponseMessage } from "openai"
 import Parser from "srt-parser-2"
 
@@ -48,15 +48,24 @@ Now, provide your result
 
 const postProcessSrtWithChatGpt = async (source: string, srt: SRT) => {
   const parser = new Parser()
-  const chunkSize = 10
+  const chunkSize = 15
   const chunks = [] as SRT[]
   for (let i = 0; i < srt.length; i += chunkSize) {
-    chunks.push(srt.slice(i, i + chunkSize))
+    const chunk = srt.slice(i, i + chunkSize)
+
+    // console.log(`Chunk ${i}, chunkSize: ${chunkSize}`, chunk)
+
+    chunks.push(chunk)
   }
 
+  // console.log(chunks)
+
+  let count = 0
   const answers = [] as string[]
   for await (const chunk of chunks) {
-    const part = parser.toSrt(srt)
+    console.log(`GPT corrects chunk ${count++}...`)
+
+    const part = parser.toSrt(chunk)
     const messages: ChatCompletionResponseMessage[] = [
       {
         role: "user",
@@ -68,24 +77,24 @@ const postProcessSrtWithChatGpt = async (source: string, srt: SRT) => {
     answers.push(answer)
   }
 
+  console.log("Done with GPT")
+
   const postSrt = parser.fromSrt(answers.join("\n"))
-  console.log("Got answers", postSrt)
-  return postSrt
+  return uniqBy(postSrt, "id")
 }
 
 export const saveVoiceOverAsFile = async (text: string) => {
   const voiceOver = await getVoiceOver(text)
 
   const file = Buffer.from(voiceOver, "binary")
-
-  const pathStr = "./public/audio/voice-over.mp3"
-  write(pathStr, file)
-
-  console.log("Voiceover saved to file")
-
   console.log("Getting SRT...")
 
-  const srt = await getSrt(path(pathStr))
+  const srt = await getSrt(file)
   const postProcessedSrt = await postProcessSrtWithChatGpt(text, srt)
-  return { srt, postProcessedSrt }
+
+  // return audio as base64
+  const base64 = Buffer.from(voiceOver).toString("base64")
+  const audio = `data:audio/mpeg;base64,${base64}`
+
+  return { srt, postProcessedSrt, audio }
 }
